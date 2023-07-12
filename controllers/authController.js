@@ -3,6 +3,7 @@ const fs = require("fs");
 
 const User = require("../models/userModel");
 const { generateActivationToken } = require("../utils/jwt");
+const { sendMail } = require("../utils/sendMail");
 
 exports.signup = async (req, res) => {
     try {
@@ -36,25 +37,27 @@ exports.signup = async (req, res) => {
         //activation
 
         const activationToken = generateActivationToken(user);
-        const activationURL = `http://127.0.0.1:5173/api/auth/${activationToken}`;
+        const activationURL = `http://127.0.0.1:5173/auth/${activationToken}`;
+
+        try {
+            await sendMail({
+                email: user.email,
+                subject: "Activate your account",
+                message: `Hello ${user.fullname}, please click on the linnk to activate your account: ${activationURL}`,
+            });
+            res.status(201).json({
+                success: true,
+                message: `Please check your email: ${user.email} to activate your account`,
+            });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error" });
+        }
 
         const newUser = await User.create(user);
 
-        if (!newUser) {
-            const filename = req.file.filename;
-            const filepath = `uploads/${filename}`;
-            fs.unlink(filepath, (error) => {
-                if (error) {
-                    console.log(error.message);
-                } else {
-                    console.log("file deleted successfully");
-                }
-            });
-        }
-
         res.status(201).json({ message: "signup success", newUser });
     } catch (error) {
-        res.status(500).json({ message: "server error" });
         console.log(error.message);
+        res.status(500).json({ message: "server error" });
     }
 };
