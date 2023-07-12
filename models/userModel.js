@@ -44,15 +44,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "user",
     },
+    // profilePic: {
+    //     public_id: {
+    //         type: String,
+    //         required: true,
+    //     },
+    //     url: {
+    //         type: String,
+    //         required: true,
+    //     },
+    // },
     profilePic: {
-        public_id: {
-            type: String,
-            required: true,
-        },
-        url: {
-            type: String,
-            required: true,
-        },
+        type: String,
     },
     createdAt: {
         type: Date,
