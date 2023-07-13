@@ -12,7 +12,7 @@ const {
     generateRefreshToken,
 } = require("../utils/jwt");
 const { sendMail } = require("../utils/sendMail");
-const { comparePassword } = require("../utils/bcrypt");
+const { comparePassword, generatePasswordHash } = require("../utils/bcrypt");
 
 exports.signup = async (req, res) => {
     try {
@@ -27,11 +27,12 @@ exports.signup = async (req, res) => {
         }
 
         const imageURL = filename && path.join(filename);
+        const passwordHash = await generatePasswordHash(password);
 
         const user = {
             fullname: fullname,
             email: email,
-            password: password,
+            password: passwordHash,
             profilePic: imageURL && imageURL,
         };
 
