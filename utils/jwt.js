@@ -6,11 +6,27 @@ const generateActivationToken = (user) => {
     });
 };
 
-const generateJwtToken = async (user, secretKey) => {
-    const userId = user._id;
-    return jwt.sign({ id: userId }, secretKey, {
+const generateJwtToken = (userId) => {
+    return jwt.sign({ _id: userId }, process.env.JWT_SECRET_KEY, {
         expiresIn: process.env.JWT_EXPIRY,
     });
 };
 
-module.exports = { generateActivationToken, generateJwtToken };
+const generateAccessToken = (userId) => {
+    return jwt.sign({ _id: userId }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: process.env.JWT_EXPIRY,
+    });
+};
+
+const generateRefreshToken = (userId) => {
+    return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.JWT_EXPIRY,
+    });
+};
+
+module.exports = {
+    generateActivationToken,
+    generateJwtToken,
+    generateAccessToken,
+    generateRefreshToken,
+};

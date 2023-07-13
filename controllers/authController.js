@@ -1,11 +1,18 @@
 const path = require("path");
-const fs = require("fs");
 const jwt = require("jsonwebtoken");
 
+//models
 const User = require("../models/userModel");
 
-const { generateActivationToken, generateJwtToken } = require("../utils/jwt");
+//utils
+const {
+    generateActivationToken,
+    generateJwtToken,
+    generateAccessToken,
+    generateRefreshToken,
+} = require("../utils/jwt");
 const { sendMail } = require("../utils/sendMail");
+const { comparePassword } = require("../utils/bcrypt");
 
 exports.signup = async (req, res) => {
     try {
@@ -71,7 +78,7 @@ exports.activateAccount = async (req, res) => {
 
         user = await User.create({ email, fullname, password, profilePic });
 
-        const token = await generateJwtToken(user, process.env.JWT_SECRET_KEY);
+        const token = generateJwtToken(user._id);
 
         //cookie options
         const options = {
@@ -80,11 +87,57 @@ exports.activateAccount = async (req, res) => {
             sameSite: "none",
             secure: true,
         };
+        res.cookie("token", token, options);
 
-        res.status(200).cookie("token", token, options).json({
+        res.status(200).json({
             success: true,
             user,
             token,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "server error", success: false });
+    }
+};
+
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Username and password is required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const isPasswordValid = comparePassword(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ success: false, message: "Invalid credentials" });
+        }
+
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Login success",
+            accessToken: accessToken,
+            id: user._id,
+            email: user.email,
+            fullname: user.fullname,
+            profilePic: user.profilePic,
+            role: user.role,
+            address: user.address,
+            phoneNumber: user.phoneNumber,
         });
     } catch (error) {
         res.status(500).json({ message: "server error", success: false });
