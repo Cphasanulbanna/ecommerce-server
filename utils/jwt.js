@@ -6,4 +6,11 @@ const generateActivationToken = (user) => {
     });
 };
 
-module.exports = { generateActivationToken };
+const generateJwtToken = async (user, secretKey) => {
+    const userId = user._id;
+    return jwt.sign({ id: userId }, secretKey, {
+        expiresIn: process.env.JWT_EXPIRY,
+    });
+};
+
+module.exports = { generateActivationToken, generateJwtToken };
