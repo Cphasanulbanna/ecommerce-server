@@ -114,7 +114,7 @@ exports.login = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        const isPasswordValid = comparePassword(password, user.password);
+        const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
@@ -140,6 +140,18 @@ exports.login = async (req, res) => {
             address: user.address,
             phoneNumber: user.phoneNumber,
         });
+    } catch (error) {
+        res.status(500).json({ message: "server error", success: false });
+    }
+};
+
+exports.user = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select("-password");
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        res.status(200).json({ success: true, user: user });
     } catch (error) {
         res.status(500).json({ message: "server error", success: false });
     }

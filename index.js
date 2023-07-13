@@ -4,7 +4,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 //routes
-const userRoute = require("./routes/authRoute");
+const authRoute = require("./routes/authRoute");
+const userRoute = require("./routes/userRoute");
 
 const { connectDb } = require("./config/db");
 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 connectDb();
 
 //endpoints
-app.use("/api/auth/", userRoute);
+app.use("/api/auth/", authRoute);
+app.use("/api/user/", userRoute);
 
 app.listen(PORT, () => console.log(`Server is running on port:${[PORT]}`));
