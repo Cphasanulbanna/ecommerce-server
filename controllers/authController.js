@@ -44,7 +44,7 @@ exports.signup = async (req, res) => {
             await sendMail({
                 email: user.email,
                 subject: "Activate your account",
-                message: `Hello ${user.fullname}, please click on the linnk to activate your account: ${activationURL}`,
+                message: `Hello ${user.fullname}, please click on the link to activate your account: ${activationURL}`,
             });
             res.status(200).json({
                 success: true,

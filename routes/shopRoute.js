@@ -3,6 +3,9 @@ const router = express.Router();
 
 const { createShop } = require("../controllers/shopController");
 
-router.post("/create-shop", createShop);
+const { upload } = require("../middlewares/upload");
+
+router.post("/create-shop", upload.single("logo"), createShop);
+router.post("/activate-shop");
 
 module.exports = router;
