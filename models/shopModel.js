@@ -22,6 +22,9 @@ const shopSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    description: {
+        type: String,
+    },
     pincode: {
         type: Number,
         required: true,
@@ -32,6 +35,10 @@ const shopSchema = new mongoose.Schema({
         type: String,
         default: "",
         required: true,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now(),
     },
 });
 
