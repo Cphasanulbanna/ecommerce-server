@@ -7,6 +7,6 @@ const { upload } = require("../middlewares/upload");
 router.post("/signup", upload.single("profile_pic"), signup);
 router.post("/activation", activateAccount);
 router.post("/login", login);
-router.get("/", logout);
+router.get("/logout", logout);
 
 module.exports = router;
