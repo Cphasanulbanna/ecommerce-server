@@ -29,7 +29,6 @@ const shopSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 6,
-        max: 6,
     },
     logo: {
         type: String,

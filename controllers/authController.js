@@ -38,7 +38,7 @@ exports.signup = async (req, res) => {
 
         //activation
         const activationToken = generateActivationToken(user, process.env.ACTIVATION_SECRET);
-        const activationURL = `http://127.0.0.1:5173/auth/activation/${activationToken}`;
+        const activationURL = `http://localhost:5173/auth/activation/${activationToken}`;
 
         try {
             await sendMail({

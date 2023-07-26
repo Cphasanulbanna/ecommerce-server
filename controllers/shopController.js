@@ -1,11 +1,14 @@
 const Shop = require("../models/shopModel");
 
 const path = require("path");
+const jwt = require("jsonwebtoken");
+
 const { generatePasswordHash, comparePassword } = require("../utils/bcrypt");
 const {
     generateActivationToken,
     generateAccessToken,
     generateRefreshToken,
+    generateJwtToken,
 } = require("../utils/jwt");
 const { sendMail } = require("../utils/sendMail");
 
@@ -34,11 +37,9 @@ exports.createShop = async (req, res) => {
             pincode: pincode,
         };
 
-        console.log("ebetred");
-
         //activation
         const activationToken = generateActivationToken(seller, process.env.SHOP_ACTIVATION_SECRET);
-        const activationURL = `http://127.0.0.1:5173/auth/activation/${activationToken}`;
+        const activationURL = `http://localhost:5173/shop/activation/${activationToken}`;
 
         try {
             await sendMail({
@@ -46,15 +47,14 @@ exports.createShop = async (req, res) => {
                 subject: "Activate your shop",
                 message: `please click on the link to activate your account: ${activationURL}`,
             });
-            console.log("success");
+
             const response = {
                 success: true,
                 message: `Please check your email: ${seller.email} to activate your account`,
             };
-            console.log(response, "response");
+
             res.status(200).json(response);
         } catch (error) {
-            console.log(error.message, "err");
             return res.status(500).json({ success: false, message: "Server error" });
         }
     } catch (error) {
@@ -72,7 +72,7 @@ exports.activateShop = async (req, res) => {
             return res.status(400).json({ message: "Invalid token", success: false });
         }
 
-        const { email, shopname, password, logo, address, phoneNumber, pincode } = newUser;
+        const { email, shopname, password, logo, address, phoneNumber, pincode } = newSeller;
 
         let seller = await Shop.findOne({ email });
         if (seller) {
@@ -105,7 +105,7 @@ exports.activateShop = async (req, res) => {
         res.status(201).json({
             message: "Seller account created",
             success: true,
-            user,
+            seller,
             seller_activation_token,
         });
     } catch (error) {
