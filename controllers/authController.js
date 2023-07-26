@@ -37,7 +37,7 @@ exports.signup = async (req, res) => {
         };
 
         //activation
-        const activationToken = generateActivationToken(user);
+        const activationToken = generateActivationToken(user, process.env.ACTIVATION_SECRET);
         const activationURL = `http://127.0.0.1:5173/auth/activation/${activationToken}`;
 
         try {
@@ -90,7 +90,8 @@ exports.activateAccount = async (req, res) => {
         };
         res.cookie("token", token, options);
 
-        res.status(200).json({
+        res.status(201).json({
+            message: "Account created",
             success: true,
             user,
             token,
@@ -119,8 +120,8 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        const accessToken = generateAccessToken(user._id);
-        const refreshToken = generateRefreshToken(user._id);
+        const accessToken = generateAccessToken(user._id, process.env.ACCESS_TOKEN_SECRET);
+        const refreshToken = generateRefreshToken(user._id, process.env.REFRESH_TOKEN_SECRET);
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,

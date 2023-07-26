@@ -1,8 +1,13 @@
 const Shop = require("../models/shopModel");
 
 const path = require("path");
-const { generatePasswordHash } = require("../utils/bcrypt");
-const { generateActivationToken } = require("../utils/jwt");
+const { generatePasswordHash, comparePassword } = require("../utils/bcrypt");
+const {
+    generateActivationToken,
+    generateAccessToken,
+    generateRefreshToken,
+} = require("../utils/jwt");
+const { sendMail } = require("../utils/sendMail");
 
 exports.createShop = async (req, res) => {
     try {
@@ -29,21 +34,27 @@ exports.createShop = async (req, res) => {
             pincode: pincode,
         };
 
+        console.log("ebetred");
+
         //activation
-        const activationToken = generateActivationToken(seller);
+        const activationToken = generateActivationToken(seller, process.env.SHOP_ACTIVATION_SECRET);
         const activationURL = `http://127.0.0.1:5173/auth/activation/${activationToken}`;
 
         try {
             await sendMail({
-                email: user.email,
+                email: seller.email,
                 subject: "Activate your shop",
                 message: `please click on the link to activate your account: ${activationURL}`,
             });
-            res.status(200).json({
+            console.log("success");
+            const response = {
                 success: true,
                 message: `Please check your email: ${seller.email} to activate your account`,
-            });
+            };
+            console.log(response, "response");
+            res.status(200).json(response);
         } catch (error) {
+            console.log(error.message, "err");
             return res.status(500).json({ success: false, message: "Server error" });
         }
     } catch (error) {
@@ -55,7 +66,7 @@ exports.createShop = async (req, res) => {
 exports.activateShop = async (req, res) => {
     try {
         const { activation_token } = req.body;
-        const newSeller = jwt.verify(activation_token, process.env.ACTIVATION_SECRET);
+        const newSeller = jwt.verify(activation_token, process.env.SHOP_ACTIVATION_SECRET);
 
         if (!newSeller) {
             return res.status(400).json({ message: "Invalid token", success: false });
@@ -80,7 +91,7 @@ exports.activateShop = async (req, res) => {
             pincode,
         });
 
-        const token = generateJwtToken(seller._id);
+        const seller_activation_token = generateJwtToken(seller._id);
 
         //cookie options
         const options = {
@@ -89,15 +100,65 @@ exports.activateShop = async (req, res) => {
             sameSite: "none",
             secure: true,
         };
-        res.cookie("token", token, options);
+        res.cookie("seller_activation_token", seller_activation_token, options);
 
-        res.status(200).json({
+        res.status(201).json({
+            message: "Seller account created",
             success: true,
             user,
-            token,
+            seller_activation_token,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server Error" });
         console.log(error.message);
+    }
+};
+
+exports.loginShop = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Username and password is required" });
+        }
+
+        const seller = await Shop.findOne({ email });
+        if (!seller) {
+            return res.status(404).json({ success: false, message: "Seller account not found" });
+        }
+
+        const isPasswordValid = await comparePassword(password, seller.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ success: false, message: "Invalid credentials" });
+        }
+
+        const accessToken = generateAccessToken(seller._id, process.env.SELLER_ACCESS_TOKEN_SECRET);
+        const sellerRefreshToken = generateRefreshToken(
+            seller._id,
+            process.env.SELLER_REFRESH_TOKEN_SECRET
+        );
+
+        res.cookie("SellerRefreshToken", sellerRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Login success",
+            accessToken: accessToken,
+            id: seller._id,
+            email: seller.email,
+            name: seller.name,
+            logo: seller.logo,
+            address: seller.address,
+            phoneNumber: seller.phoneNumber,
+            pincode: seller.pincode,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "server error", success: false });
     }
 };
