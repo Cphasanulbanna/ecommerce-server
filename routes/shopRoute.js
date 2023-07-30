@@ -5,9 +5,11 @@ const { createShop, activateShop, loginShop, seller } = require("../controllers/
 
 const { upload } = require("../middlewares/upload");
 
+const { checkSellerAuth } = require("../middlewares/checkSellerAuth");
+
 router.post("/create-shop", upload.single("logo"), createShop);
 router.post("/activation", activateShop);
 router.post("/login", loginShop);
-router.get("/seller", seller);
+router.get("/seller", checkSellerAuth, seller);
 
 module.exports = router;
