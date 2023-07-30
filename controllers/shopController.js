@@ -169,9 +169,9 @@ exports.seller = async (req, res) => {
         if (!seller) {
             return res.status(404).json({ success: false, message: "Seller not found" });
         }
-        res.status(200).json(user);
+        res.status(200).json(seller);
     } catch (error) {
         res.status(500).json({ message: "Server Error", success: false });
-        console.log(error);
+        console.log(error.message, "error message****************");
     }
 };
